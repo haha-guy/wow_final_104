@@ -56,10 +56,9 @@ class CHeadquarter
 
 class CWarrior
 {
-	protected:
+	public:
 		CHeadquarter *pHeadquarter;
 		int steps;
-	public:
 		int nNo;//武士在生产中的序号
 		int fightResult;//战斗结果-1 负，0 平， 1 胜，初始值-2；但是武士往下一个城市前进时，需要修改战斗结果为-2
 		int nKindNo;
@@ -81,8 +80,8 @@ class CWarrior
 *要发生战斗.通过扫描CCity对象的数组，以决定是否发生战斗，这样就将时间复杂度
 *控制在了O(N).该函数完成最主要的功能，主要有跟总部，跟城市交互，修改自身武器的属性
 */
-		virtual int AttackEnemy(CWarrior *enemy, int force) = 0;//返回战斗结果
-		virtual int FightBack(CWarrior *enemy, int force) = 0;//返回战斗结果
+		virtual int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId) = 0;//返回战斗结果
+		virtual int FightBack(CWarrior *enemy, int force, int h, int m, int cityId) = 0;//返回战斗结果
 		
 		virtual int ReportLionLoyalty(void){ return 0; };
 		virtual double ReportDragonMoral(void) { return 0.0; }
@@ -99,8 +98,8 @@ class CDragon :public CWarrior
 	public:
 		bool yell;
 		CDragon(CHeadquarter *p, int nNo_, int kind);
-		int AttackEnemy(CWarrior *enemy, int force);
-		int FightBack(CWarrior *enemy, int force);
+		int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
+		int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
 		void CountMorale(void);
 		void PrintResult(int nTime);
 		double ReportDragonMoral(void){ return fmorale; }
@@ -111,8 +110,8 @@ class CNinja :public CWarrior
 {
 	public:
 		CNinja(CHeadquarter * p, int nNo_, int kind);
-		int AttackEnemy(CWarrior *enemy, int force);
-		int FightBack(CWarrior *enemy, int force);
+		int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
+		int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
 		void PrintResult(int nTime);
 		~CNinja();
 };
@@ -121,8 +120,8 @@ class CIceman :public CWarrior
 {
 	public:
 		CIceman(CHeadquarter * p, int nNo_, int kind);
-		int AttackEnemy(CWarrior *enemy, int force);
-		int FightBack(CWarrior *enemy, int force);
+		int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
+		int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
 		void PrintResult(int nTime);
 		~CIceman();
 };
@@ -134,8 +133,8 @@ class CLion:public CWarrior
 		int loyaltyDec;
 	public:
 		CLion(CHeadquarter * p, int nNo_, int kind);
-		int AttackEnemy(CWarrior *enemy, int force);
-		int FightBack(CWarrior *enemy, int force);
+		int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
+		int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
 		int ReportLionLoyalty(void) { return nLoyalty; };
 		void ChangeLoyalty(int K);//改变忠诚度
 		void PrintResult(int nTime);
@@ -146,8 +145,8 @@ class CWolf :public CWarrior
 {
 	public:
 		CWolf(CHeadquarter * p, int nNo_, int kind);
-		int AttackEnemy(CWarrior *enemy, int force);
-		int FightBack(CWarrior *enemy, int force);
+		int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
+		int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
 		void PrintResult(int nTime);
 		~CWolf();
 };

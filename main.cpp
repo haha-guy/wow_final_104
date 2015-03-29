@@ -7,8 +7,8 @@ bool isHeadTaken(int h, int m, CHeadquarter &hd);
 void hqTaken(int h, int m, int color);
 void LionFlee(CCity &city, int h, int m);
 
-//几个亮点：将red的武士挂在城市中的[RED],将武器挂在武士中相应的位置
-
+//几个亮点：将red的武士挂在城市中的[RED],将武器挂在武士中相应的位置，此处即用了良好的数据表示
+//将公共的代码放在基类函数中，而将处理特定类的覆盖函数中调用基类的相关函数
 int main()
 {
 	int t;
@@ -141,6 +141,7 @@ int main()
 			nMinute++;
 			{
 				//实现了相互射箭,此处不进行战斗结果的设置，故而也实现了放箭不算战斗
+				//同时还需要处理两个武士同时被对方射死，此时需要将二者析构掉
 				CWarrior *red, *blue;
 				for (i = 0; i < N - 1; i++)
 				{
@@ -190,24 +191,45 @@ int main()
 				}
 			}
 
-			//40 minute
+			//40 minute，此处战斗只可能使用sword
+			//将被箭射死的武士尸体将留在城市中（这样需要在前进函数中进行相应的检测）
+			//但这样一来，战斗函数反击函数也需要判断敌方武士是死是活,相关的战斗输出在战斗函数中进行
+			//带来的好处是战斗时可以统一处理,但是需要注意当相邻武士同时被对方射死
+			//这种特殊情况在循环中处理
 			{
 				CWarrior *red, *blue;
 				for (i = 0; i < N; i++)
 				{
 					red = cities[i].warriorInCity[RED], blue = cities[i].warriorInCity[BLUE];
-					if (red != NULL && blue != NULL)
+					//当武士前进到被5分钟前的飞箭杀死的武士所在城市，也算一场战斗，该有的事件也一样会有
+					if (cities[i].killedByArrow)
 					{
-						if (cities[i].flagColor == RED || i % 2 == 1)
+						//当放箭的武士前进到被它用飞箭杀死的武士的城市时，对
+						//死去的武士进行析构
+						if (red != NULL)//说明blue被red杀死
+						{
+							//
+						}
+						if (blue != NULL)//说明red被blue的飞箭杀死
 						{
 
 						}
-						if (cities[i].flagColor == BLUE || i % 2 == 0)
-						{
 
+					}
+					else
+					{
+						if (red != NULL && blue != NULL)
+						{
+							if (cities[i].flagColor == RED || i % 2 == 1)
+							{
+
+							}
+							if (cities[i].flagColor == BLUE || i % 2 == 0)
+							{
+
+							}
 						}
 					}
-
 
 
 

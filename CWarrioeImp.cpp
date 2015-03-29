@@ -113,38 +113,67 @@ void CDragon::PrintResult(int nTime)
 	printf("It has a %s,and it's morale is %.2f\n", 
 		CWeapon::Names[wps[0]->nKindNo], fmorale);
 }
-
-//该函数相当于主动进攻,该函数去调用反击函数，
-int CDragon::AttackEnemy(CWarrior *enemy, int force)
+static void AttackEnemyOutp(int h, int m, char *aHead, const char *aName, int aNo, 
+	char *pHead, const char *pName, int pNo, int cityId, int wLv, int wF)
 {
+	printf("%03d:%02d %s %s %d attacked %s %s %d in city %d with %d elements and force %d",
+		h, m,
+		aHead, aName, aNo,
+		pHead, pName, pNo,
+		cityId, wLv, wF);
+}//主动进攻输出
+static void FightBackOutp();
+
+
+//这个函数处理的战斗包括两个活的武士以及一死一活
+//将被箭射死的武士尸体将留在城市中（这样需要在前进函数中进行相应的检测）
+//但这样一来，战斗函数反击函数也需要判断敌方武士是死是活,相关的战斗输出在战斗函数中进行
+//该函数相当于主动进攻,该函数去调用反击函数
+int CDragon::AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId)
+{
+	char aheadColor[10];
+	char pheadColor[10];
 	int tmp = 0;
 	int i;
 	if (enemy->nKindNo == LION)
 		tmp = enemy->wLifeValue;
 
-	for (i = 0; i < WEAPON_NUM; i++)
+	//主动攻击发生
+	//使用武器进行攻击
+	// 自己是活的敌方要是活的才使用武器，主动攻击只使用sword
+	if (this->wLifeValue > 0 && enemy->wLifeValue > 0
+		&& wps[SWORD] != NULL)
 	{
-		if (wps[i] != NULL && wps[i]->nKindNo != ARROW)//弓箭在主动和被动进攻中都不使用
-		{
-			wps[i]->UseWeapon(this, enemy);//如果武器是bomb，在bomb函数中进行判断是否使用
-		}
+		wps[SWORD]->UseWeapon(this, enemy);
 	}
-	if (enemy->wLifeValue == 0 && this->wLifeValue == 0)//使用的武器是bomb,在扫描城市时，如果发现一个武士的战斗结果为DRAW，且生命力值为<= 0,则需要析构两个武士
-		return DRAW;
-	if (enemy->wLifeValue > 0)
+	//使用攻击力进行攻击
+	if (this->wLifeValue > 0 && enemy->wLifeValue > 0)
+	{
+		this->pHeadquarter->GetColor(aheadColor);
+		enemy->pHeadquarter->GetColor(pheadColor);
+		AttackEnemyOutp(h, m,
+			aheadColor, this->Names[this->nKindNo], this->nNo,
+			pheadColor, enemy->Names[enemy->nKindNo], enemy->nNo,
+			cityId, this->wLifeValue, this->attackForce);//产生这个输出是在敌我双方都是活的情况下
 		enemy->wLifeValue -= force;
-	if (enemy->wLifeValue <= 0)
+	}
+	if (enemy->wLifeValue <= 0)//这里包括敌人被箭射死和被杀死的情况，此处主动攻击的一定是活的
 	{
 		//战斗胜利后做的事
-		fmorale += 0.2;//在输出时统一处理, 士气增减发生在欢呼之前
+		//此处包含两种含义：一是主动攻击对象是死的， 二是自身攻击致对方死掉
+		fmorale += 0.2;
 		yell = true;
 		this->wLifeValue += tmp;
 		return fightResult = WIN;//以此作为标记，在扫描所有城市时再进行奖励和拿走城市生命值
 	}
-	else
+
+	//被动攻击发生了
+	//执行到此处，说明对方没有被杀死，有两种情况导致这一结果，即主动攻击的武士本身是死的和主动攻击的武士攻击力不足以杀死
 	{
-		//执行到此处说明发生反击
-		if (enemy->FightBack(this, enemy->attackForce / 2) == DRAW)
+		//执行到此处说明发生反击,反击既可能是主动攻击的武士本身是死的但是它有优先攻击的特权，此时也会发生反击
+		//但是这时没有反击输出
+		//也可能是战斗中没被主动攻击杀死，此时有反击输出，二者区分在于发起主动攻击的武士的死活
+		if (enemy->FightBack(this, enemy->attackForce / 2, h, m, cityId) == DRAW)
 			fightResult = DRAW;
 		else
 			fightResult = LOSE;
@@ -153,21 +182,30 @@ int CDragon::AttackEnemy(CWarrior *enemy, int force)
 	}
 }
 
-int CDragon::FightBack(CWarrior *enemy, int force)
+int CDragon::FightBack(CWarrior *enemy, int force, int h, int m, int cityId)
 {
 	int tmp = 0;
+	char aheadColor[10];
+	char pheadColor[10];
 	if (enemy->nKindNo == LION)
 		tmp = enemy->wLifeValue;
-
-	for (int i = 0; i < WEAPON_NUM; i++)
+	if (enemy->wLifeValue > 0)
 	{
-		if (wps[i] != NULL && wps[i]->nKindNo == SWORD)//反击只能使用Sword
-			wps[i]->UseWeapon(this, enemy);
+		if (wps[SWORD] != NULL)//反击只能使用Sword
+			wps[SWORD]->UseWeapon(this, enemy);
+		this->pHeadquarter->GetColor(aheadColor);
+		enemy->pHeadquarter->GetColor(pheadColor);
+		printf("%03d:%02d %s %s %d attacked %s %s %d in city %d",
+			h, m,
+			aheadColor, this->Names[this->nKindNo], this->nNo,
+			pheadColor, enemy->Names[enemy->nKindNo], enemy->nNo,
+			cityId);
+		enemy->wLifeValue -= force;
 	}
-	enemy->wLifeValue -= force;
 	if (enemy->wLifeValue <= 0)
 	{
 		//战斗胜利后的事
+		//此处包含两种含义：一是反击对象是死的， 二是自身反击致对方死掉
 		fmorale += 0.2;
 		this->wLifeValue += tmp;
 		return fightResult = WIN;
