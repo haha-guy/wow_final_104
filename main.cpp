@@ -7,8 +7,15 @@ bool isHeadTaken(int h, int m, CHeadquarter &hd);
 void hqTaken(int h, int m, int color);
 void LionFlee(CCity &city, int h, int m);
 
-//几个亮点：将red的武士挂在城市中的[RED],将武器挂在武士中相应的位置，此处即用了良好的数据表示
-//将公共的代码放在基类函数中，而将处理特定类的覆盖函数中调用基类的相关函数
+
+/*一些设计想法，武器的析构发生在武器使用中
+*武士的析构包括两部分，出现相邻城市的武士同时被对方的飞箭射死，此时武士
+*析构发生射箭循环中，另一部分在武士战斗结束并且相关事件处理结束后进行析构
+*将red的武士挂在城市中的[RED],将武器挂在武士中相应的位置，
+*此处即用了良好的数据表示
+*将公共的代码放在基类函数中，而将处理特定类的覆盖函数中调用基类的相关函数,
+*如AttackEnemy函数、PrintResult函数等
+*/
 int main()
 {
 	int t;
@@ -52,7 +59,8 @@ int main()
 			//3rd, 先写上，然后再考虑封装成函数,这部分需要从新思考
 			//总部的往前走的武士为pWarriors[nTatalWarriorNum],当其往前走后
 			//需要将该位置置为NULL
-			//武士往前走后，还需要对城市中的killedByArrow置为false
+			//武士前进之前需要做很多准备工作，第一，本身的战斗结果清空
+			//第二，还需要对城市中的killedByArrow置为false
 			nMinute++;
 			{
 				for (i = 0; i < N; i++)
@@ -201,44 +209,24 @@ int main()
 				for (i = 0; i < N; i++)
 				{
 					red = cities[i].warriorInCity[RED], blue = cities[i].warriorInCity[BLUE];
-					//当武士前进到被5分钟前的飞箭杀死的武士所在城市，也算一场战斗，该有的事件也一样会有
-					if (cities[i].killedByArrow)
+					if (red != NULL && blue != NULL)
 					{
-						//当放箭的武士前进到被它用飞箭杀死的武士的城市时，对
-						//死去的武士进行析构
-						if (red != NULL)//说明blue被red杀死
+						if (cities[i].flagColor == RED || i % 2 == 1)
 						{
-							//
+							red->AttackEnemy(blue, red->attackForce, nHour, *nMinute, i);
 						}
-						if (blue != NULL)//说明red被blue的飞箭杀死
+						if (cities[i].flagColor == BLUE || i % 2 == 0)
 						{
-
-						}
-
-					}
-					else
-					{
-						if (red != NULL && blue != NULL)
-						{
-							if (cities[i].flagColor == RED || i % 2 == 1)
-							{
-
-							}
-							if (cities[i].flagColor == BLUE || i % 2 == 0)
-							{
-
-							}
+							blue->AttackEnemy(red, blue->attackForce, nHour, *nMinute, i);
 						}
 					}
-
-
 
 				}
-
+			}
+			//战斗后续处理，比如修改城市的旗帜，获取城市生命值，被奖励，战死的武士析构
+			{
 
 			}
-
-
 
 			if (isHeadTaken(nHour, *nMinute, RedHead))//产生13th输出
 				break;

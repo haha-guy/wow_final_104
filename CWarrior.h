@@ -80,9 +80,8 @@ class CWarrior
 *要发生战斗.通过扫描CCity对象的数组，以决定是否发生战斗，这样就将时间复杂度
 *控制在了O(N).该函数完成最主要的功能，主要有跟总部，跟城市交互，修改自身武器的属性
 */
-		virtual int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId) = 0;//返回战斗结果
-		virtual int FightBack(CWarrior *enemy, int force, int h, int m, int cityId) = 0;//返回战斗结果
-		
+		virtual int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
+		virtual int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
 		virtual int ReportLionLoyalty(void){ return 0; };
 		virtual double ReportDragonMoral(void) { return 0.0; }
 		virtual void PrintResult(int nTime,int nKindNo);
@@ -147,6 +146,7 @@ class CWolf :public CWarrior
 		CWolf(CHeadquarter * p, int nNo_, int kind);
 		int AttackEnemy(CWarrior *enemy, int force, int h, int m, int cityId);
 		int FightBack(CWarrior *enemy, int force, int h, int m, int cityId);
+		void wolfSeizeWeapon(CWarrior *enemy);
 		void PrintResult(int nTime);
 		~CWolf();
 };
