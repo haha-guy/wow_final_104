@@ -54,14 +54,15 @@ fightResult(OTHER)
 		wps[i] = NULL;
 }
 
-void CWarrior::TakeCityLifeVal(CCity *city)
+void CWarrior::TakeCityLifeVal(CCity &city)
 {
 	//if (this->fightResult == WIN)
 	{
-		pHeadquarter->nTotalLifeValue += city->cityLifeValue;
-		city->cityLifeValue = 0;
+		pHeadquarter->lvFromCity += city.cityLifeValue;
+		city.cityLifeValue = 0;
 	}
 }
+
 
 void CWarrior::GetAwardFromHd(void)
 {
@@ -423,30 +424,32 @@ inline void CCity::CityLifeValInc(void)
 //nColor can be got by the Fighting function.
 void CCity::CalculateWinTimes()
 {
-	CWarrior* tmp;
-	for (int i = 0; i < 2; i++)
+	//还需要输出旗帜升起
+	CWarrior *red = warriorInCity[RED], *blue = warriorInCity[BLUE];
+	if (red->fightResult == WIN)
 	{
-		tmp = warriorInCity[i];
-		if (tmp->fightResult == WIN && tmp->HqColor() == RED)
+		blueWinTimes = 0;
+		redWinTimes += 1;
+		if (redWinTimes >= 2)
 		{
-			redWinTimes += 1;
-			blueWinTimes = 0;
-			if (redWinTimes >= 2)
-				flagColor = RED;
-		}
-		if (tmp->fightResult == WIN && tmp->HqColor() == BLUE)
-		{
+			flagColor = RED;
 			redWinTimes = 0;
-			blueWinTimes += 1;
-			if (blueWinTimes >= 2)
-				flagColor = BLUE;
 		}
-
-		if (tmp->fightResult == DRAW)
+	}
+	if (blue->fightResult == WIN)
+	{
+		redWinTimes = 0;
+		blueWinTimes += 1;
+		if (blueWinTimes >= 2)
 		{
-			redWinTimes = 0;
+			flagColor = BLUE;
 			blueWinTimes = 0;
 		}
+	}
+	if (red->fightResult == DRAW || blue->fightResult == DRAW)
+	{
+		redWinTimes = 0;
+		blueWinTimes = 0;
 	}
 }
 
@@ -541,7 +544,7 @@ class CLion;
 class CWolf;
 
 //Implement CHeadquater
-CHeadquarter::CHeadquarter() :nCurMakingSeqIdx(0), nTotalWarriorNum(0), bStopped(0)
+CHeadquarter::CHeadquarter() :nCurMakingSeqIdx(0), nTotalWarriorNum(0), bStopped(0), lvFromCity(0)
 {
 	for (int i = 0; i < WARRIOR_NUM; i++)
 		anWarriorNum[i] = 0;
@@ -611,6 +614,11 @@ int CHeadquarter::Produce(int nTime)
 	pWarriors[nTotalWarriorNum]->PrintResult(nTime);//打印第一种输出
 	nTotalWarriorNum ++;
 	return 1;
+}
+void CHeadquarter::HqAccCityLv(void)
+{
+	nTotalLifeValue += lvFromCity;
+	lvFromCity = 0;
 }
 void CHeadquarter::GetColor( char * szColor)
 {

@@ -223,9 +223,73 @@ int main()
 
 				}
 			}
-			//战斗后续处理，比如修改城市的旗帜，获取城市生命值，被奖励，战死的武士析构
+			//战斗后续处理，比如修改城市的旗帜，获取城市生命值，被奖励，战死的武士析构,这些都结束后要修改
+			//武士的fightResult
 			{
+				CWarrior *red, *blue;
+				for (i = 0; i < N; i++)
+				{
+					cities[i].CalculateWinTimes();
+					//先获取奖励，然后再取得城市生命值
+					//red从右到左奖励取得生命值，blue从右到左奖励取得生命值
+					red = cities[N - 1 - i].warriorInCity[RED], blue = cities[i].warriorInCity[RED];
+					if (blue != NULL && blue->fightResult == WIN)
+					{
+						blue->GetAwardFromHd();
+						blue->TakeCityLifeVal(cities[i]);//需要输出武士获取生命元
+					}
+					if (red != NULL && red->fightResult == WIN)
+					{
+						red->GetAwardFromHd();
+						red->TakeCityLifeVal(cities[N - 1 - i]);
+					}
+					if (red != NULL && red->wLifeValue <= 0)
+						red->~CWarrior();
+					if (blue != NULL && blue->wLifeValue <= 0)
+						blue->~CWarrior();
+				}
+				RedHead.HqAccCityLv();
+				BlueHead.HqAccCityLv();
+			}
+			//总部报告生命值
+			nMinute++;
+			char szColor[20]; 
+			RedHead.GetColor(szColor);
+			printf("%03d:%02d %d element in %s headquater", 
+				nHour, *nMinute, RedHead.GetTotalLifeValue(),szColor);
+			BlueHead.GetColor(szColor);
+			printf("%03d:%02d %d element in %s headquater",
+				nHour, *nMinute, BlueHead.GetTotalLifeValue(), szColor);
 
+			//武士报告武器情况,同样需要封装成函数,可以进行相关的测试,看相关结果是否符合
+			nMinute++;
+			for (i = 0; i < N; i++)
+			{
+				CWarrior *warr = cities[i].warriorInCity[RED];
+				if ( warr != NULL)
+				{
+					printf("%03d:%02d red %s %d has",
+						nHour, *nMinute, warr->Names[warr->nKindNo], warr->nNo);
+					if (warr->wps[ARROW] != NULL)
+					{
+						cout << "arrow(%d)" << warr->wps[ARROW]->CheckWeaponStatus();
+						if (warr->wps[BOMB] != NULL || warr->wps[SWORD] != NULL)
+							cout << ", ";
+						else
+							cout << endl;
+					}
+					else if (warr->wps[BOMB] != NULL)
+					{
+						cout << "bomb";
+						(warr->wps[SWORD] != NULL) ? (cout << ", ") : (cout << endl);
+					}
+					else if (warr->wps[SWORD] != NULL)
+					{
+						cout << "sword(%d)" << warr->wps[SWORD]->CheckWeaponStatus() << endl;
+					}
+					else
+						cout << "no weapon" << endl;
+				}
 			}
 
 			if (isHeadTaken(nHour, *nMinute, RedHead))//产生13th输出
@@ -247,7 +311,6 @@ void hqTaken(int h, int m, int color)
 		printf("%03d:%02d red headquarter was taken", h, m);
 	if (color == BLUE)
 		printf("%03d:%02d blue headquarter was taken", h, m);
-
 }
 
 bool isHeadTaken(int h, int m, CHeadquarter &hd)

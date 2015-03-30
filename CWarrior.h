@@ -39,6 +39,7 @@ class CHeadquarter
 		int nColor;
 		int nCurMakingSeqIdx;
 		int anWarriorNum[WARRIOR_NUM];
+		int lvFromCity;
 	public:
 		int nTotalWarriorNum;
 		CWarrior * pWarriors[MAX_WARRIORS];
@@ -48,6 +49,7 @@ class CHeadquarter
 		CHeadquarter();
 		void Init(int nColor_, int lv);
 		int Produce(int nTime);
+		void HqAccCityLv(void);
 		void GetColor( char * szColor);
 		int GetColor(void){ return nColor; };
 		int GetTotalLifeValue() { return nTotalLifeValue; }
@@ -70,7 +72,7 @@ class CWarrior
 		static int InitialLifeValue [WARRIOR_NUM];
 		static int InitialAttackForce[WARRIOR_NUM];
 		CWarrior( CHeadquarter * p,int nNo_, int kind);
-		void TakeCityLifeVal(CCity *city);
+		void TakeCityLifeVal(CCity &city);
 		void GetAwardFromHd(void);
 		int HqColor(void);
 		void StepForward(CCity *next);	//StepForward 改变steps的值并将自身挂到相应城市中
@@ -169,7 +171,7 @@ class CCity
 		inline void CityLifeValInc(void);
 		void CalculateWinTimes(void);
 		friend void CWarrior::StepForward(CCity *next);
-		friend void CWarrior::TakeCityLifeVal(CCity *city);
+		friend void CWarrior::TakeCityLifeVal(CCity &city);
 		~CCity();
 };
 
